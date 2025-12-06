@@ -1,3 +1,7 @@
 .venv/
 data/
 runs/
+bdd100k/
+bdd10k/
+/bdd10k/
+**/bdd10k/
