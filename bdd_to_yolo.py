@@ -1,7 +1,7 @@
 import json
 import os
 from pathlib import Path
-from tqdm import tqdm  # pip install tqdm if you don't have it
+from tqdm import tqdm 
 
 BASE_DIR = Path("data/") 
 OUTPUT_DIR = BASE_DIR / "labels"
@@ -9,7 +9,6 @@ OUTPUT_DIR = BASE_DIR / "labels"
 IMG_WIDTH = 1280
 IMG_HEIGHT = 720
 
-# Class Mapping (Must match your bdd100k.yaml)
 CLASS_MAP = {
     "person": 0, "rider": 1, "car": 2, "truck": 3,
     "bus": 4, "train": 5, "motor": 6, "bike": 7,

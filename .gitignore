@@ -1,2 +1,9 @@
 .venv/
 data/
+runs/
+data/
+bdd10k/
+/bdd10k/
+**/bdd10k/
+100k/
+data.zip
