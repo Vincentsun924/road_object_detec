@@ -1,15 +1,14 @@
 import json
 import os
 from pathlib import Path
-from tqdm import tqdm  # pip install tqdm if you don't have it
+from tqdm import tqdm 
 
-BASE_DIR = Path("bdd10k/") 
+BASE_DIR = Path("data/") 
 OUTPUT_DIR = BASE_DIR / "labels"
 
 IMG_WIDTH = 1280
 IMG_HEIGHT = 720
 
-# Class Mapping (Must match your bdd100k.yaml)
 CLASS_MAP = {
     "person": 0, "rider": 1, "car": 2, "truck": 3,
     "bus": 4, "train": 5, "motor": 6, "bike": 7,
@@ -37,41 +36,39 @@ def convert_bbox(box):
 def process_dataset_split(split_name):
     """
     Processes a whole dataset split (e.g., 'train', 'val').
-    Reads from the single JSON file 'bdd10k/bdd_labels/bdd100k_labels_images_<split_name>.json'
-    and writes to 'bdd10k/labels/<split_name>'.
+    Reads from 'data/labels/<split_name>' and writes to 'data/yolo_labels/<split_name>'.
     """
-    json_file_path = BASE_DIR / "bdd_labels" / f"bdd100k_labels_images_{split_name}.json"
+    input_dir = BASE_DIR / "bdd_labels" / split_name
     output_dir = OUTPUT_DIR / split_name
     
-    if not json_file_path.exists():
-        print(f"Warning: Input file not found, skipping: {json_file_path}")
+    if not input_dir.exists():
+        print(f"Warning: Input directory not found, skipping: {input_dir}")
         return
         
     output_dir.mkdir(parents=True, exist_ok=True)
     
-    print(f"Loading {json_file_path}...")
-    with open(json_file_path) as f:
-        data = json.load(f)
+    json_files = [f for f in os.listdir(input_dir) if f.endswith(".json")]
     
-    print(f"Processing {len(data)} images in '{split_name}' split...")
+    print(f"Processing {len(json_files)} JSON files in '{split_name}' split...")
 
-    for image_entry in tqdm(data, desc=f"  -> Converting {split_name}"):
+    for json_filename in tqdm(json_files, desc=f"  -> Converting {split_name}"):
+        json_path = input_dir / json_filename
         
-        image_name = image_entry['name']
-        txt_filename = os.path.splitext(image_name)[0] + ".txt"
+        with open(json_path) as f:
+            data = json.load(f)
+            
+        txt_filename = os.path.splitext(data['name'])[0] + ".txt"
         txt_path = output_dir / txt_filename
         
         with open(txt_path, 'w') as f_out:
-
-            labels = image_entry.get('labels', [])
-            
-            for obj in labels:
-                category = obj.get('category')
-                
-                if category in CLASS_MAP and 'box2d' in obj:
-                    cls_id = CLASS_MAP[category]
-                    xc, yc, w, h = convert_bbox(obj['box2d'])
-                    f_out.write(f"{cls_id} {xc:.6f} {yc:.6f} {w:.6f} {h:.6f}\n")
+            if 'frames' in data and len(data['frames']) > 0 and 'objects' in data['frames'][0]:
+                for obj in data['frames'][0]['objects']:
+                    category = obj.get('category')
+                    
+                    if category in CLASS_MAP and 'box2d' in obj:
+                        cls_id = CLASS_MAP[category]
+                        xc, yc, w, h = convert_bbox(obj['box2d'])
+                        f_out.write(f"{cls_id} {xc:.6f} {yc:.6f} {w:.6f} {h:.6f}\n")
 
 def main():
     """Main function to run the conversion for all dataset splits."""
@@ -79,7 +76,7 @@ def main():
     print(f"Source: {BASE_DIR / 'labels'}")
     print(f"Destination: {OUTPUT_DIR}\n")
 
-    splits_to_process = ["train", "val"]
+    splits_to_process = ["train", "val", "test"]
     
     for split in splits_to_process:
         process_dataset_split(split)

@@ -1,4 +1,4 @@
-path: /Users/beaulin/DS 340 Project/Analysis/road_object_detec/data
+path: /content/dataset/data
 train: images/train
 val: images/val
 test: images/test
